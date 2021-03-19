@@ -1,0 +1,17 @@
+{
+  "name": "internal-link-orphan-finder",
+  "version": "0.0.0",
+  "description": "Find pages with no useful internal path from a selected entry set.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/edilec/internal-link-orphan-finder"
+  }
+}
