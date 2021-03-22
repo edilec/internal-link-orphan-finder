@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "1",
+  "site": "example site with an isolated page and a disconnected cycle",
+  "roots": ["/"],
+  "pages": [
+    { "id": "/", "title": "Home" },
+    { "id": "/about", "title": "About" },
+    { "id": "/legacy/alpha", "title": "Legacy alpha" },
+    { "id": "/legacy/beta", "title": "Legacy beta" },
+    { "id": "/press-kit", "title": "Press kit", "note": "published but never linked" }
+  ],
+  "links": [
+    { "from": "/", "to": "/about", "kind": "nav", "label": "About" },
+    { "from": "/about", "to": "/", "kind": "nav", "label": "Home" },
+    { "from": "/legacy/alpha", "to": "/legacy/beta", "kind": "body", "label": "Beta" },
+    { "from": "/legacy/beta", "to": "/legacy/alpha", "kind": "body", "label": "Alpha" },
+    { "from": "/press-kit", "to": "/press-kit", "kind": "body", "label": "This page" }
+  ]
+}
