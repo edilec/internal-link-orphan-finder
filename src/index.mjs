@@ -11,7 +11,7 @@
  * not see a page cannot be used to prove that page is fine.
  */
 
-import { dirname, isAbsolute, relative, resolve } from 'node:path'
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import { realpath } from 'node:fs/promises'
 
 import { analyzeLinkGraph } from './graph.mjs'
@@ -218,8 +218,23 @@ export async function analyzeCaptureFile({ capture, root, roots, limits } = {}) 
     throw new TypeError(`Capture root could not be resolved: ${error.code ?? 'unknown error'}`)
   }
 
-  const lexicalRelative = relative(rootReal, captureAbsolute)
-  if (lexicalRelative === '' || lexicalRelative === '..' || lexicalRelative.startsWith('..') || isAbsolute(lexicalRelative)) {
+  // Where the operator SAID the capture is: the real parent directory plus the
+  // given name. Pointing outside the declared root is a configuration mistake,
+  // so it throws; following a symlink out of the root is an attack on
+  // confinement, so it is refused and reported below.
+  let declaredReal
+  try {
+    declaredReal = join(await realpath(dirname(captureAbsolute)), basename(captureAbsolute))
+  } catch (error) {
+    throw new TypeError(`Capture directory could not be resolved: ${error.code ?? 'unknown error'}`)
+  }
+  const lexicalRelative = relative(rootReal, declaredReal)
+  if (
+    lexicalRelative === '' ||
+    lexicalRelative === '..' ||
+    lexicalRelative.startsWith(`..${sep}`) ||
+    isAbsolute(lexicalRelative)
+  ) {
     throw new TypeError('Capture file is outside the capture root')
   }
   const captureName = toPosix(lexicalRelative)
@@ -245,8 +260,8 @@ export async function analyzeCaptureFile({ capture, root, roots, limits } = {}) 
       }),
     )
   }
-  // The capture itself is confined too: a symlink is followed before the check,
-  // not after it.
+  // The capture itself is confined too: its symlink is followed BEFORE the
+  // check, never after it.
   if (!isInside(rootReal, captureReal)) {
     return fail(
       makeFinding({
