@@ -84,7 +84,10 @@ export const INCOMPLETE_RULES = Object.freeze([
 ])
 
 const EVIDENCE_LIMIT = 160
-const UNPRINTABLE = new RegExp('[\\u0000-\\u001f\\u007f\\u2028\\u2029]', 'g')
+// Everything a line-oriented consumer may treat as a line break or a control
+// sequence: C0 controls, DEL, the C1 range (U+0085 NEL included -- Python's
+// splitlines breaks on it), and the two Unicode line separators.
+const UNPRINTABLE = new RegExp('[\\u0000-\\u001f\\u007f-\\u009f\\u2028\\u2029]', 'g')
 
 /** Plain code-unit ordering. Locale collation varies with the ICU data a Node build ships. */
 export function byCodeUnit(left, right) {
@@ -101,9 +104,18 @@ export function forcesIncomplete(ruleId) {
   return INCOMPLETE_RULES.includes(ruleId)
 }
 
+/**
+ * Flatten everything that could end a line: C0 and C1 controls, DEL, and the
+ * two Unicode line separators. Capture content -- page ids, capture file names
+ * -- is data, never an instruction and never a report line of its own.
+ */
+export function singleLine(value) {
+  return String(value).replace(UNPRINTABLE, ' ')
+}
+
 /** A bounded single-line excerpt. Capture content is data, never an instruction. */
 export function excerpt(value) {
-  const flattened = String(value).replace(UNPRINTABLE, ' ').trim()
+  const flattened = singleLine(value).trim()
   if (flattened.length <= EVIDENCE_LIMIT) return flattened
   return `${flattened.slice(0, EVIDENCE_LIMIT)}...`
 }

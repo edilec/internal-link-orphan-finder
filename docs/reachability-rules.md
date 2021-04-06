@@ -169,6 +169,16 @@ above. `summary` carries the contract's `checked`, `errors` and `warnings` plus 
 `summary.checked` counts inventory pages examined. A report can never combine `status: "pass"` with
 `checked: 0`; the single place where status is decided emits `empty-inventory` instead.
 
+The human-readable report is line-oriented: **one finding is exactly one line.** A page id and a
+capture file name are crawl output, so either may contain a newline; both reach the printed line
+(through `message` and `location.file`), and control characters — C0, DEL, the C1 range including
+U+0085, and U+2028/U+2029 — are flattened to spaces before printing. Nothing is dropped: the text
+is still reported, as data on the line of the finding that carries it, and the JSON report keeps
+the original bytes, escaped by `JSON.stringify`. A capture cannot forge a finding line that no
+finding stands behind.
+
+`evidence` is flattened the same way and additionally bounded to 160 characters.
+
 ### Determinism
 
 - Findings sort by `location.file`, then `location.pointer`, then `ruleId`, then `message`, all by

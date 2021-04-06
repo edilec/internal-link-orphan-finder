@@ -24,6 +24,7 @@ import {
   TOOL_ID,
   isRecord,
   makeFinding,
+  singleLine,
   sortFindings,
   validateLimits,
 } from './rules.mjs'
@@ -284,6 +285,15 @@ export async function analyzeCaptureFile({ capture, root, roots, limits } = {}) 
 
 const SEVERITY_WIDTH = 7
 
+/**
+ * The human report is line-oriented, so one finding is exactly one line.
+ *
+ * `severity` and `ruleId` come from the frozen table, but `location.file` and
+ * `message` carry capture-derived text: a page id or a capture file name may
+ * hold a newline, and printing it raw would let a capture forge finding lines
+ * that no finding stands behind. Every such field is flattened before it is
+ * printed. The JSON report keeps the bytes as they were; JSON escapes them.
+ */
 export function formatReport(report) {
   const { summary } = report
   const lines = [
@@ -293,9 +303,12 @@ export function formatReport(report) {
     `${summary.errors} error, ${summary.warnings} warning, ${summary.info} info from ${summary.roots} entry page(s).`,
   ]
   for (const finding of report.findings) {
-    const place = [finding.location.file, finding.location.pointer].filter(Boolean).join(' ')
+    const place = [finding.location.file, finding.location.pointer]
+      .filter(Boolean)
+      .map(singleLine)
+      .join(' ')
     lines.push(
-      `${finding.severity.toUpperCase().padEnd(SEVERITY_WIDTH)} ${place === '' ? '(configuration)' : place} ${finding.ruleId} ${finding.message}`,
+      `${finding.severity.toUpperCase().padEnd(SEVERITY_WIDTH)} ${place === '' ? '(configuration)' : place} ${finding.ruleId} ${singleLine(finding.message)}`,
     )
   }
   return `${lines.join('\n')}\n`

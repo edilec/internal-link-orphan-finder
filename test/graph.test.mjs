@@ -434,6 +434,56 @@ test('configuration mistakes throw instead of producing a report', () => {
   assert.throws(() => severityOf('not-a-rule'), /Unknown ruleId "not-a-rule"/)
 })
 
+/**
+ * A page id and a capture file name are crawl output: attacker-influenceable
+ * data. The human report is line-oriented, so a newline inside either one used
+ * to print extra lines that no finding stood behind -- a log scraper counting
+ * "^ERROR" saw more errors than the run found. One finding is one line.
+ */
+test('capture text can never forge an extra finding line in the human report', () => {
+  const NEWLINE = String.fromCharCode(10)
+  const LINE_BREAKS = new RegExp(
+    '[\\u000a\\u000b\\u000c\\u000d\\u0085\\u2028\\u2029]',
+  )
+  const forgedLine = `${NEWLINE}ERROR   forged.json /pages/9 orphan-page Totally fake finding`
+  // One vector per untrusted field the line carries: the page id reaches
+  // `message`, the document name reaches `location.file`.
+  const forgedId = `/x${forgedLine}${String.fromCharCode(0x2028)}${String.fromCharCode(0x0085)}`
+  const forgedFile = `crawl${forgedLine}.json`
+
+  const report = analyzeCaptureDocuments({
+    documents: [
+      capture(forgedFile, {
+        roots: ['/'],
+        pages: [{ id: '/' }, { id: forgedId }, { id: '/y' }],
+        links: [
+          { from: forgedId, to: '/y' },
+          { from: '/y', to: forgedId },
+        ],
+      }),
+    ],
+  })
+
+  assert.equal(report.findings.length, 3)
+  assert.equal(report.summary.errors, 2)
+  assert.equal(report.summary.info, 1)
+
+  const text = formatReport(report)
+  const lines = text.split(LINE_BREAKS)
+  assert.equal(lines.pop(), '', 'the report ends with exactly one newline')
+  assert.equal(lines.length, 4 + report.findings.length, text)
+  assert.equal(lines.filter((line) => line.startsWith('ERROR')).length, report.summary.errors)
+  assert.equal(lines.filter((line) => line.startsWith('INFO')).length, report.summary.info)
+  assert.equal(lines.filter((line) => line.startsWith('WARNING')).length, report.summary.warnings)
+
+  // Nothing is hidden: the forged text is still reported, as data on the line
+  // of the finding that carries it.
+  assert.ok(lines.some((line) => line.includes('Totally fake finding')))
+  assert.ok(lines.some((line) => line.startsWith('ERROR   crawl ERROR   forged.json')))
+  // The JSON report was never forgeable: it keeps the bytes, escaped.
+  assert.equal(JSON.parse(JSON.stringify(report)).findings.length, 3)
+})
+
 test('the human summary states the status and every finding', () => {
   const report = analyzeCaptureDocuments({
     documents: [

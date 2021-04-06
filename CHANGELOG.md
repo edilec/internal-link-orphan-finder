@@ -27,6 +27,13 @@ renaming one is a breaking change and is recorded as such.
 - Examples for each outcome: `site-clean.json` (pass), `site-orphan.json` (fail),
   `site-broken.json` (incomplete).
 
+### Fixed
+
+- The human-readable report prints exactly one line per finding. A page id or a capture file name
+  holding a newline used to print extra lines that no finding stood behind, so a log scraper
+  counting `^ERROR` saw more errors than the run reported. Capture-derived text is flattened
+  before it is printed; the JSON report was never affected.
+
 ### Notes
 
 - Severity comes from one frozen `ruleId -> severity` table; an unknown rule id throws.
