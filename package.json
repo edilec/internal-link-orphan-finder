@@ -7,7 +7,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "lint": "node --check src/rules.mjs && node --check src/capture.mjs && node --check src/graph.mjs && node --check src/index.mjs && node --check bin/internal-link-orphan-finder.mjs && node --check test/graph.test.mjs && node --check test/capture.test.mjs && node --check test/incomplete.test.mjs && node --check test/severity-table.test.mjs && node --check test/cli.test.mjs",
+    "lint": "node --check src/rules.mjs && node --check src/capture.mjs && node --check src/graph.mjs && node --check src/index.mjs && node --check bin/internal-link-orphan-finder.mjs && node --check test/graph.test.mjs && node --check test/capture.test.mjs && node --check test/determinism.test.mjs && node --check test/incomplete.test.mjs && node --check test/severity-table.test.mjs && node --check test/cli.test.mjs",
     "test": "node --test",
     "test:coverage": "node --test --experimental-test-coverage --test-coverage-include=src/**",
     "example": "node bin/internal-link-orphan-finder.mjs --capture examples/site-clean.json",
