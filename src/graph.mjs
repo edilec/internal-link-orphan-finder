@@ -196,9 +196,16 @@ function reasonPath(id, parent) {
 
 /**
  * Weakly connected groups among the pages no entry page reaches. Group ids are
- * derived from the lowest-sorted member, so they are stable without a counter.
+ * derived from the lowest-sorted member, so they are stable without a counter,
+ * members are listed in code-unit order, and the groups themselves come back
+ * in code-unit order of their id.
+ *
+ * Exported so those three orderings can be asserted against ids handed in in
+ * any order: the one caller inside this module passes them already sorted, so
+ * an assertion made only through `analyzeLinkGraph` would pass with the sorts
+ * deleted.
  */
-function disconnectedGroups(unreachedIds, outgoing, incoming) {
+export function disconnectedGroups(unreachedIds, outgoing, incoming) {
   const remaining = new Set(unreachedIds)
   const groups = []
 

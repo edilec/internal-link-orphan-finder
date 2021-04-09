@@ -185,6 +185,8 @@ finding stands behind.
   UTF-16 code unit. `localeCompare` is never used: ICU data varies between Node builds and has
   already produced a real ordering bug in this catalog.
 - Page results sort by page id, by code unit.
+- Ids listed inside a result or a finding are in code-unit order too: a page's `incoming`
+  list, a disconnected group's members, and the group id, which is the lowest member.
 - Include order is the declaration order in the capture, never filesystem enumeration order.
 - There is no clock, no random source and no locale anywhere in the tool.
 - Two runs over identical inputs produce byte-identical stdout.

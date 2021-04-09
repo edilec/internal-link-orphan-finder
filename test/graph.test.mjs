@@ -7,6 +7,7 @@ import {
   formatReport,
   severityOf,
 } from '../src/index.mjs'
+import { disconnectedGroups } from '../src/graph.mjs'
 
 function capture(file, body) {
   return { file, data: { schemaVersion: '1', ...body } }
@@ -146,6 +147,58 @@ test('a cycle that no entry page reaches is an unreachable group, not an orphan'
   assert.equal(
     page(report, '/y').reason,
     'Linked from 1 inventory page(s), none of which is reachable from an entry page: /x',
+  )
+})
+
+/**
+ * Group ordering, asserted where it is decided. `analyzeLinkGraph` hands this
+ * function ids that are already sorted, so both sorts below can be deleted with
+ * every end-to-end fixture still green; ids handed in unsorted are the only way
+ * to make the guarantee fail when it is removed.
+ */
+test('groups and their members come back in code-unit order, whatever order they were found in', () => {
+  const outgoing = new Map([
+    ['/a', new Set(['/b'])],
+    ['/x', new Set(['/y'])],
+  ])
+  const incoming = new Map([
+    ['/b', new Set(['/a'])],
+    ['/y', new Set(['/x'])],
+  ])
+
+  // Reverse code-unit order, so the second component is discovered first.
+  const groups = disconnectedGroups(['/y', '/x', '/b', '/a'], outgoing, incoming)
+
+  assert.deepEqual(groups.map((group) => group.id), ['/a', '/x'])
+  assert.deepEqual(groups.map((group) => group.members), [['/a', '/b'], ['/x', '/y']])
+})
+
+test('a group is named after its lowest member and lists its members in code-unit order', () => {
+  const report = analyzeCaptureDocuments({
+    documents: [
+      capture('crawl.json', {
+        roots: ['/'],
+        // Declared out of order; walked /a -> /c -> /b, which is not the order
+        // the group must be reported in.
+        pages: [{ id: '/c' }, { id: '/' }, { id: '/b' }, { id: '/a' }],
+        links: [
+          { from: '/a', to: '/c' },
+          { from: '/c', to: '/b' },
+        ],
+      }),
+    ],
+  })
+
+  assert.equal(report.summary.groups, 1)
+  const group = report.findings.find((finding) => finding.ruleId === 'disconnected-group')
+  assert.equal(
+    group.message,
+    'Disconnected group of 3 page(s) that link only to each other: /a, /b, /c',
+  )
+  assert.equal(group.evidence, '/a')
+  assert.deepEqual(
+    report.pages.filter((entry) => entry.group !== null).map((entry) => [entry.id, entry.group]),
+    [['/a', '/a'], ['/b', '/a'], ['/c', '/a']],
   )
 })
 
