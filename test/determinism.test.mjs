@@ -4,6 +4,7 @@ import { readFile, readdir } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
 import { analyzeCaptureDocuments, byCodeUnit } from '../src/index.mjs'
+import { makeFinding, sortFindings } from '../src/rules.mjs'
 
 /**
  * Determinism, pinned.
@@ -107,4 +108,53 @@ test('the tool carries no locale, no clock, no random source and no directory wa
       assert.equal(source.includes(needle), false, `${label} uses ${needle}: ${why}`)
     }
   }
+})
+
+/**
+ * The documented finding order is file, then pointer, then ruleId, then
+ * message. In every shipped scenario the message comparator happens to
+ * reproduce what the ruleId comparator decides -- "Disconnected group..." <
+ * "Unreachable page..." matches disconnected-group < unreachable-page -- so no
+ * end-to-end fixture can tell the two apart, and the ruleId tiebreak was
+ * deletable with the suite green. These findings are built with the messages in
+ * the opposite order to the rule ids, so each comparator is pinned on its own.
+ */
+test('findings sort by file, then pointer, then ruleId, then message', () => {
+  const at = (file, pointer, ruleId, message) => makeFinding({ ruleId, message, file, pointer })
+  const trace = (findings) =>
+    findings.map((finding) => [
+      finding.location.file,
+      finding.location.pointer,
+      finding.ruleId,
+      finding.message,
+    ])
+
+  const sorted = sortFindings([
+    at('b.json', '/pages/0', 'orphan-page', 'aaa'),
+    at('a.json', '/pages/1', 'self-link', 'aaa'),
+    at('a.json', '/pages/0', 'unreachable-page', 'aaa'),
+    at('a.json', '/pages/0', 'disconnected-group', 'zzz'),
+  ])
+
+  assert.deepEqual(trace(sorted), [
+    ['a.json', '/pages/0', 'disconnected-group', 'zzz'],
+    ['a.json', '/pages/0', 'unreachable-page', 'aaa'],
+    ['a.json', '/pages/1', 'self-link', 'aaa'],
+    ['b.json', '/pages/0', 'orphan-page', 'aaa'],
+  ])
+
+  // Message is the last tiebreak, and it is a real one: two findings that agree
+  // on file, pointer and rule are ordered by it rather than by arrival.
+  const twins = sortFindings([
+    at('a.json', '/pages/0', 'orphan-page', 'zzz'),
+    at('a.json', '/pages/0', 'orphan-page', 'aaa'),
+  ])
+  assert.deepEqual(twins.map((finding) => finding.message), ['aaa', 'zzz'])
+
+  // A finding with no location sorts as the empty string, i.e. first.
+  const unplaced = sortFindings([
+    at('a.json', '/pages/0', 'orphan-page', 'aaa'),
+    makeFinding({ ruleId: 'no-usable-root', message: 'aaa' }),
+  ])
+  assert.deepEqual(unplaced.map((finding) => finding.ruleId), ['no-usable-root', 'orphan-page'])
 })
