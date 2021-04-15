@@ -9,17 +9,34 @@ const projectDirectory = resolve(import.meta.dirname, '..')
 const CLI = resolve(projectDirectory, 'bin/internal-link-orphan-finder.mjs')
 const NEWLINE = String.fromCharCode(10)
 
-/** Run the real CLI and capture the exit code and both streams separately. */
-function run(args) {
+/**
+ * Run the real CLI and capture the exit code and both streams separately.
+ *
+ * `timeout` is a watchdog, not a convenience: a run that has to be killed is a
+ * failure of the run, so `killed` is reported alongside the exit code.
+ */
+function run(args, { timeout = 0 } = {}) {
   return new Promise((fulfil) => {
     execFile(
       process.execPath,
       [CLI, ...args],
-      { cwd: projectDirectory, maxBuffer: 16 * 1024 * 1024 },
+      { cwd: projectDirectory, maxBuffer: 16 * 1024 * 1024, timeout },
       (error, stdout, stderr) => {
-        fulfil({ code: error === null ? 0 : error.code, stdout, stderr })
+        fulfil({
+          code: error === null ? 0 : error.code,
+          killed: error !== null && error.killed === true,
+          stdout,
+          stderr,
+        })
       },
     )
+  })
+}
+
+/** Create a POSIX named pipe, or report that this host cannot. */
+function makeFifo(path) {
+  return new Promise((fulfil) => {
+    execFile('mkfifo', [path], (error) => fulfil(error === null))
   })
 }
 
@@ -205,6 +222,38 @@ test('an empty inventory is reported, never passed', async (t) => {
   assert.equal(report.summary.checked, 0)
   assert.notEqual(report.status, 'pass')
   assert.deepEqual(report.findings.map((finding) => finding.ruleId), ['empty-inventory'])
+})
+
+/**
+ * The guard that refuses a non-regular file before reading it is the only thing
+ * standing between this tool and an unbounded hang. A directory cannot stand in
+ * for this test: readFile fails with EISDIR on a directory, so the existing
+ * directory test passes with the guard deleted, while a named pipe with no
+ * writer blocks in open() forever.
+ */
+test('a named pipe handed in as a capture is refused instead of blocking forever', async (t) => {
+  if (process.platform === 'win32') {
+    t.skip('POSIX named pipes only')
+    return
+  }
+  const base = await mkdtemp(join(tmpdir(), 'ilof-fifo-'))
+  t.after(() => rm(base, { recursive: true, force: true }))
+
+  const fifo = join(base, 'capture.json')
+  if (!(await makeFifo(fifo))) {
+    t.skip('mkfifo is not available on this host')
+    return
+  }
+
+  const result = await run(['--capture', fifo, '--json'], { timeout: 10000 })
+
+  assert.equal(result.killed, false, 'the CLI hung on a named pipe instead of refusing it')
+  assert.equal(result.code, 2)
+  const report = JSON.parse(result.stdout)
+  assert.equal(report.status, 'incomplete')
+  assert.deepEqual(report.findings.map((finding) => finding.ruleId), ['capture-unreadable'])
+  assert.equal(report.findings[0].message, 'Capture path is not a regular file.')
+  assert.equal(report.summary.checked, 0)
 })
 
 test('two runs over the same capture produce byte-identical stdout', async () => {
