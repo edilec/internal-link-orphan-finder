@@ -41,5 +41,10 @@ renaming one is a breaking change and is recorded as such.
   that fails if it is removed from the list.
 - `status: "pass"` with `checked: 0` is impossible: the one place that decides status emits
   `empty-inventory` instead.
+- Ordering is pinned by tests that fail when the comparator, the page sort or either group sort is
+  removed: the fixtures use ids where code-unit order and locale order genuinely disagree, declared
+  out of order, so `localeCompare` cannot be substituted unnoticed.
+- The guard that refuses a non-regular capture file is defended by a named pipe, which blocks
+  forever without it; a directory cannot stand in for that test, because reading one fails anyway.
 
 No release has been published.

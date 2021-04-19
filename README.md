@@ -138,7 +138,8 @@ which runs `lint` (`node --check` on every file), `test` (`node --test`), the `e
 - `src/` — `rules.mjs` (identity, bounds, the severity table), `capture.mjs` (reading, validation,
   path confinement), `graph.mjs` (reachability), `index.mjs` (report assembly)
 - `bin/` — the CLI
-- `test/` — public API, real CLI, confinement, the incomplete invariant, the severity table
+- `test/` — public API, real CLI, confinement, the incomplete invariant, the severity table,
+  determinism and ordering
 - `docs/` — the rule catalog, capture format, limits and determinism
 - `examples/` — a clean capture, a failing one, and an incomplete one
 
