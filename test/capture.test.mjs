@@ -341,8 +341,17 @@ test('the shipped clean example passes when read through the filesystem', async 
     report.pages.find((entry) => entry.id === '/blog/first-post').source.file,
     'site-clean.json',
   )
+  // No absolute path from this machine reaches the report: every document is
+  // named by its path relative to the capture root. Asserted over the page
+  // results, which this report has -- the same predicate over `findings` would
+  // be vacuously true here, because this report has none.
+  assert.deepEqual(
+    [...new Set(report.pages.map((entry) => entry.source.file))],
+    ['site-clean.json'],
+  )
   assert.equal(
-    report.findings.every((finding) => !String(finding.location.file ?? '').startsWith('/')),
-    true,
+    JSON.stringify(report).includes(resolve(import.meta.dirname, '..')),
+    false,
+    'the report must never name a path outside the capture root',
   )
 })

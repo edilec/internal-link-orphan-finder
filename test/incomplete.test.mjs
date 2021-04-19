@@ -168,7 +168,6 @@ for (const ruleId of Object.keys(SCENARIOS).sort()) {
       `scenario for ${ruleId} did not emit it: ${JSON.stringify(report.findings.map((f) => f.ruleId))}`,
     )
     assert.equal(report.status, 'incomplete', `${ruleId} did not force an incomplete report`)
-    assert.notEqual(report.status, 'pass')
   })
 }
 
