@@ -5,6 +5,16 @@ renaming one is a breaking change and is recorded as such.
 
 ## Unreleased
 
+### Fixed
+
+- `capture-invalid` no longer reproduces the capture file inside its own message. `JSON.parse`
+  reports a failure either by position or by quoting the input back — `Unexpected token 'A',
+  "AKIAIOSFODNN7EXAMPLE" is not valid JSON`, which is the whole document when the document is short
+  — and that quote sits at the front of the message, where flattening and the evidence bound both
+  leave it intact. A capture or shard short enough to be only a credential was therefore published
+  in full by the finding that failed to read it. The message is built from the position, line and
+  column alone now.
+
 ### Added
 
 - Breadth-first internal-link reachability over an explicit page inventory, from entry pages taken

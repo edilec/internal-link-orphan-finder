@@ -120,6 +120,30 @@ export function excerpt(value) {
   return `${flattened.slice(0, EVIDENCE_LIMIT)}...`
 }
 
+/**
+ * What a `JSON.parse` failure may say about a file this tool did not write.
+ *
+ * V8 reports a parse failure two ways, and one of them quotes the input back:
+ * `Unexpected token 'A', "AKIAIOSFODNN7EXAMPLE" is not valid JSON` -- the whole
+ * document when the document is short, a ten-character prefix when it is not.
+ * A capture file short enough to be only a credential is therefore reproduced
+ * in full by its own error message, on exactly the path an untrusted or
+ * malformed file takes. `singleLine` and `excerpt` do not help: they flatten
+ * controls and cut from the end, while the quoted input sits at the front.
+ *
+ * The position is the useful half and carries no content, so it is kept
+ * whenever V8 offers one. The quoted half never leaves this function.
+ */
+export function parseFailureDetail(error) {
+  const message = String(error?.message ?? 'could not be parsed')
+  const position = /at position \d+(?: \(line \d+ column \d+\))?/.exec(message)
+  if (position) return message.slice(0, position.index + position[0].length)
+  const token = /^Unexpected token (.+?), ".*?"(?:\.\.\.)? is not valid JSON$/s.exec(message)
+  if (token) return `unexpected token ${token[1]} at the start of the document`
+  if (/^Unexpected end of JSON input$/.test(message)) return message
+  return 'the document could not be parsed as JSON'
+}
+
 export function isRecord(value) {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
 }

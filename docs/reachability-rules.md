@@ -179,6 +179,14 @@ finding stands behind.
 
 `evidence` is flattened the same way and additionally bounded to 160 characters.
 
+Flattening is not what keeps a capture file's *content* out of the report, and for a while nothing
+did. `JSON.parse` reports a failure either by position or by quoting the input back — `Unexpected
+token 'A', "AKIAIOSFODNN7EXAMPLE" is not valid JSON`, which is the entire document when the document
+is short. That quote sits at the front of the message, so flattening and the 160-character bound
+both leave it intact. The `capture-invalid` message for a file that does not parse is built from the
+failure's position, line and column alone; the quoted input is discarded before anything is
+recorded.
+
 ### Determinism
 
 - Findings sort by `location.file`, then `location.pointer`, then `ruleId`, then `message`, all by

@@ -40,6 +40,7 @@ export {
   TOOL_ID,
   byCodeUnit,
   forcesIncomplete,
+  parseFailureDetail,
   severityOf,
   validateLimits,
 } from './rules.mjs'

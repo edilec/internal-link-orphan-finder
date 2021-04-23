@@ -13,7 +13,7 @@
 import { readFile, realpath, stat } from 'node:fs/promises'
 import { isAbsolute, relative, resolve, sep } from 'node:path'
 
-import { CAPTURE_SCHEMA_VERSION, isRecord, makeFinding } from './rules.mjs'
+import { CAPTURE_SCHEMA_VERSION, isRecord, makeFinding, parseFailureDetail } from './rules.mjs'
 
 const DOCUMENT_KEYS = Object.freeze(['include', 'links', 'pages', 'roots', 'schemaVersion', 'site'])
 const PAGE_KEYS = Object.freeze(['id', 'note', 'title'])
@@ -307,7 +307,7 @@ async function readDocument(realPath, file, limits) {
     return {
       finding: makeFinding({
         ruleId: 'capture-invalid',
-        message: `Capture file is not valid JSON: ${error.message}`,
+        message: `Capture file is not valid JSON: ${parseFailureDetail(error)}`,
         file,
       }),
     }
