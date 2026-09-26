@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "1",
+  "site": "example documentation site",
+  "roots": ["/"],
+  "include": ["links/blog.json"],
+  "pages": [
+    { "id": "/", "title": "Home" },
+    { "id": "/about", "title": "About" },
+    { "id": "/contact", "title": "Contact" },
+    { "id": "/docs", "title": "Documentation" },
+    { "id": "/docs/api", "title": "API reference" },
+    { "id": "/docs/install", "title": "Installation" },
+    { "id": "/blog", "title": "Blog" },
+    { "id": "/blog/first-post", "title": "First post" }
+  ],
+  "links": [
+    { "from": "/", "to": "/about", "kind": "nav", "label": "About" },
+    { "from": "/", "to": "/docs", "kind": "nav", "label": "Docs" },
+    { "from": "/", "to": "/blog", "kind": "nav", "label": "Blog" },
+    { "from": "/about", "to": "/contact", "kind": "body", "label": "Talk to us" },
+    { "from": "/about", "to": "/", "kind": "nav", "label": "Home" },
+    { "from": "/docs", "to": "/docs/install", "kind": "body", "label": "Install" },
+    { "from": "/docs/install", "to": "/docs/api", "kind": "body", "label": "API reference" },
+    { "from": "/docs/api", "to": "/docs/install", "kind": "body", "label": "Back to install" },
+    { "from": "/contact", "to": "/", "kind": "nav", "label": "Home" }
+  ]
+}

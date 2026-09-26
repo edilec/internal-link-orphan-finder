@@ -1,0 +1,51 @@
+{
+  "name": "internal-link-orphan-finder",
+  "version": "0.1.0",
+  "description": "Compute internal-link reachability over an explicit page inventory: orphans, unreachable groups and uncovered link targets, each with a reason path.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "lint": "node --check src/rules.mjs && node --check src/capture.mjs && node --check src/graph.mjs && node --check src/index.mjs && node --check bin/internal-link-orphan-finder.mjs && node --check test/graph.test.mjs && node --check test/capture.test.mjs && node --check test/determinism.test.mjs && node --check test/incomplete.test.mjs && node --check test/severity-table.test.mjs && node --check test/secrets.test.mjs && node --check test/parse-failure.test.mjs && node --check test/cli.test.mjs",
+    "test": "node --test",
+    "test:coverage": "node --test --experimental-test-coverage --test-coverage-include=src/**",
+    "example": "node bin/internal-link-orphan-finder.mjs --capture examples/site-clean.json",
+    "pack:check": "npm pack --dry-run",
+    "check": "npm run lint && npm test && npm run example && npm run pack:check"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/edilec/internal-link-orphan-finder.git"
+  },
+  "bin": {
+    "internal-link-orphan-finder": "./bin/internal-link-orphan-finder.mjs"
+  },
+  "exports": {
+    ".": "./src/index.mjs"
+  },
+  "files": [
+    "bin",
+    "src",
+    "examples",
+    "docs",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "internal-links",
+    "orphan-pages",
+    "reachability",
+    "site-graph",
+    "crawl",
+    "seo",
+    "cli"
+  ],
+  "author": "Edilec Private Limited",
+  "bugs": {
+    "url": "https://github.com/edilec/internal-link-orphan-finder/issues"
+  },
+  "homepage": "https://github.com/edilec/internal-link-orphan-finder#readme"
+}

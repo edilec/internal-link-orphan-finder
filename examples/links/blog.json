@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "1",
+  "site": "example documentation site (blog shard)",
+  "links": [
+    { "from": "/blog", "to": "/blog/first-post", "kind": "list", "label": "First post" },
+    { "from": "/blog/first-post", "to": "/blog", "kind": "nav", "label": "All posts" },
+    { "from": "/blog/first-post", "to": "/docs/api", "kind": "body", "label": "API reference" }
+  ]
+}
