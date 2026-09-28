@@ -3,7 +3,7 @@
 All notable changes to this project are recorded here. Rule ids are part of the public contract:
 renaming one is a breaking change and is recorded as such.
 
-## Unreleased
+## 0.1.0 - 2026-09-28
 
 ### Fixed
 
@@ -56,5 +56,3 @@ renaming one is a breaking change and is recorded as such.
   out of order, so `localeCompare` cannot be substituted unnoticed.
 - The guard that refuses a non-regular capture file is defended by a named pipe, which blocks
   forever without it; a directory cannot stand in for that test, because reading one fails anyway.
-
-No release has been published.
