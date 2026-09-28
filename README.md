@@ -5,6 +5,7 @@ entry pages, and report the pages nothing links to, the groups that link only to
 the link targets the crawl never covered — each with the reason that produced it.
 
 - **Repository:** [edilec/internal-link-orphan-finder](https://github.com/edilec/internal-link-orphan-finder)
+- **Worked example:** [Compare reachable pages, an orphan and a disconnected group](https://edilec.com/open-source/internal-link-orphan-finder/) using the public synthetic captures.
 - **Area:** SEO & Search
 - **License:** MIT
 - **Dependencies:** none. Node 22+ built-ins only.
